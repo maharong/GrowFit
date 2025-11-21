@@ -6,4 +6,9 @@
     </style>
 
     <style name="Theme.GrowFit" parent="Base.Theme.GrowFit" />
+    <style name="Theme.GrowFit.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/growfit_logo</item>
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="postSplashScreenTheme">@style/Theme.GrowFit</item>
+    </style>
 </resources>

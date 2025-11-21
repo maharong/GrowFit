@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.github.maharong.growfit.HomeFragment"
+        android:label="home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/presetListFragment"
+        android:name="com.github.maharong.growfit.PresetListFragment"
+        android:label="preset_list"
+        tools:layout="@layout/fragment_preset_list" />
+
+    <fragment
+        android:id="@+id/presetEditFragment"
+        android:name="com.github.maharong.growfit.PresetEditFragment"
+        android:label="preset_edit"
+        tools:layout="@layout/fragment_preset_edit" />
+
+    <fragment
+        android:id="@+id/stepEditFragment"
+        android:name="com.github.maharong.growfit.StepEditFragment"
+        android:label="step_edit"
+        tools:layout="@layout/fragment_step_edit" />
+
+    <fragment
+        android:id="@+id/runFragment"
+        android:name="com.github.maharong.growfit.RunFragment"
+        android:label="run"
+        tools:layout="@layout/fragment_run" />
+
+    <fragment
+        android:id="@+id/completeFragment"
+        android:name="com.github.maharong.growfit.CompleteFragment"
+        android:label="complete"
+        tools:layout="@layout/fragment_complete" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.github.maharong.growfit.SettingsFragment"
+        android:label="settings"
+        tools:layout="@layout/fragment_settings" />
+
+</navigation>
