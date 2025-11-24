@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">GrowFit</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="plant_image">식물 이미지</string>
 </resources>

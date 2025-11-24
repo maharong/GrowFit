@@ -1,6 +1,11 @@
+import org.gradle.kotlin.dsl.coreLibraryDesugaring
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -31,6 +36,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -46,10 +53,16 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.navigation.ui.ktx)
+    implementation(libs.androidx.room.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    implementation("com.google.dagger:hilt-android:2.57.1")
+    ksp("com.google.dagger:hilt-android-compiler:2.57.1")
+    ksp("androidx.room:room-compiler:2.8.4")
+    implementation("androidx.hilt:hilt-navigation-fragment:1.2.0")
 }
