@@ -68,4 +68,14 @@ object AppModule {
             dateProvider = { LocalDate.now() }
         )
     }
+
+    @Provides
+    fun providePresetDao(
+        db: AppDatabase
+    ): PresetDao = db.presetDao()
+
+    @Provides
+    fun providePresetRepository(
+        dao: PresetDao
+    ): PresetRepository = PresetRepository(dao)
 }

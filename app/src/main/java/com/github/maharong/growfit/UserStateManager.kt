@@ -16,6 +16,21 @@ class UserStateManager(
     // 레벨 구간 정의
     private val expTable = listOf(0, 100, 250, 500, 900)
 
+    // 레벨별 리워드 데이터 클래스
+    data class LevelReward(val exp: Int, val points: Int)
+
+    // 현재 레벨에 따른 보상량 계산
+    private fun getRewardForLevel(level: Int): LevelReward {
+        return when(level) {
+            1 -> LevelReward(exp = 50, points = 10)
+            2 -> LevelReward(exp = 60, points = 12)
+            3 -> LevelReward(exp = 70, points = 14)
+            4 -> LevelReward(exp = 90, points = 18)
+            5 -> LevelReward(exp = 0, points = 20) // MAX 레벨에서 포인트만 지급
+            else -> LevelReward(exp = 0, points = 0)
+        }
+    }
+
     // 경험치 -> 레벨 계산
     fun getLevel(exp: Int): Int {
         for (i in expTable.indices.reversed()) {
@@ -38,14 +53,25 @@ class UserStateManager(
         // 이미 오늘 보상 받았으면 무시
         if (state.lastWorkoutDay == today) return
 
-        // 추후 조정 예정
-        val expReward = 50
-        val pointReward = 10
+        // 현재 레벨 계산
+        val level = getLevel(state.exp)
 
-        state.exp += expReward
-        state.points += pointReward
+        // 레벨에 따른 리워드 계산
+        val reward = getRewardForLevel(level)
+
+        // 오늘 운동 완료 상태로 만들고 마지막 운동 날짜 갱신
+        state.todayComplete = true
         state.lastWorkoutDay = today
 
+        // 보상 지급
+        state.exp += reward.exp
+        state.points += reward.points
+
+        // 경험치가 MAX 레벨 요구량을 넘었을 경우 고정
+        val maxExpCap = expTable.last()
+        if (state.exp > maxExpCap) {
+            state.exp = maxExpCap
+        }
         repo.save(state)
     }
 
@@ -112,6 +138,25 @@ class UserStateManager(
             expTable.last()
         } else {
             expTable[safeLevel]   // 다음 구간의 시작점이 곧 현재 구간의 max
+        }
+    }
+
+    // 프리셋 선택 함수
+    suspend fun selectPreset(id: String) {
+        val state = repo.load()
+        state.selectedPresetId = id
+        state.todayComplete = false
+        repo.save(state)
+    }
+
+    // 오늘 운동 여부 초기화 함수
+    suspend fun resetTodayIfNewDay() {
+        val today = localDateToLong(dateProvider())
+        val state = repo.load()
+
+        if (state.lastWorkoutDay != today) {
+            state.todayComplete = false
+            repo.save(state)
         }
     }
 }

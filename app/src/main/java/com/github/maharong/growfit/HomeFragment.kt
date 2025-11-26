@@ -42,6 +42,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         observeUiState()
+        setupButtons()
         viewModel.load()
     }
 
@@ -58,10 +59,10 @@ class HomeFragment : Fragment() {
                     skinId = state.skinId,
                     level = state.level
                 )
-                binding.imagePlant.setImageResource(plantResId)
+                binding.imgPlant.setImageResource(plantResId)
 
                 // 2. 레벨 텍스트
-                binding.textLevel.text = "Lv.${state.level}"
+                binding.txtLevel.text = "Lv ${state.level}"
 
                 // 3. 경험치 ProgressBar (현재 레벨 구간 내 위치만 보여줌)
                 val minExp = state.minExpForLevel
@@ -69,18 +70,48 @@ class HomeFragment : Fragment() {
                 val currentExp = state.exp
 
                 // ProgressBar는 "이 레벨 구간 안에서"의 상대값만 보여준다.
-                val levelRange = (maxExp - minExp).coerceAtLeast(1)
-                val progressWithinLevel = (currentExp - minExp).coerceIn(0, levelRange)
+                val range = (maxExp - minExp).coerceAtLeast(1)
+                val progress = (currentExp - minExp).coerceIn(0, range)
 
-                binding.progressExp.max = levelRange
-                binding.progressExp.progress = progressWithinLevel
+                binding.expProgress.max = range
+                binding.expProgress.progress = progress
 
-                // 텍스트는 총 exp / 구간 max 등 원하는 형식대로 표시 가능
-                binding.textExp.text = "$currentExp / $maxExp EXP"
+                // EXP 숫자 텍스트
+                binding.txtExpValue.text = "$currentExp / $maxExp EXP"
 
                 // 4. 포인트 텍스트
-                binding.textPoints.text = "${state.points} P"
+                binding.txtPoints.text = "${state.points} P"
+
+                // 5. 프리셋 + 오늘 운동 상태
+                val preset = state.presetName ?: "-"
+                val today = if (state.todayComplete) "COMPLETE" else "READY"
+
+                binding.txtPresetStatus.text =
+                    "PRESET: $preset\nTODAY: $today"
             }
+        }
+    }
+
+    private fun setupButtons() {
+
+        // 프리셋 선택
+        binding.btnPreset.setOnClickListener {
+            // TODO: NavController 연결
+        }
+
+        // 운동 시작
+        binding.btnStart.setOnClickListener {
+            // TODO: 운동 타이머 화면 이동
+        }
+
+        // SHOP (스킨 구매)
+        binding.btnShop.setOnClickListener {
+            // TODO: 상점 화면 이동
+        }
+
+        // 설정
+        binding.btnSettings.setOnClickListener {
+            // TODO: 설정 화면 이동
         }
     }
 
