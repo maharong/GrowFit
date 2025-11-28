@@ -145,7 +145,6 @@ class UserStateManager(
     suspend fun selectPreset(id: String) {
         val state = repo.load()
         state.selectedPresetId = id
-        state.todayComplete = false
         repo.save(state)
     }
 

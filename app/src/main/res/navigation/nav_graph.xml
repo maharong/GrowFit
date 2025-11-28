@@ -15,13 +15,23 @@
         android:id="@+id/presetListFragment"
         android:name="com.github.maharong.growfit.PresetListFragment"
         android:label="preset_list"
-        tools:layout="@layout/fragment_preset_list" />
+        tools:layout="@layout/fragment_preset_list">
+        <action
+            android:id="@+id/action_presetListFragment_to_presetEditFragment"
+            app:destination="@id/presetEditFragment" />
+    </fragment>
+
 
     <fragment
         android:id="@+id/presetEditFragment"
         android:name="com.github.maharong.growfit.PresetEditFragment"
         android:label="preset_edit"
-        tools:layout="@layout/fragment_preset_edit" />
+        tools:layout="@layout/fragment_preset_edit">
+        <argument
+            android:name="presetId"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
 
     <fragment
         android:id="@+id/stepEditFragment"
@@ -46,5 +56,11 @@
         android:name="com.github.maharong.growfit.SettingsFragment"
         android:label="settings"
         tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/shopFragment"
+        android:name="com.github.maharong.growfit.ShopFragment"
+        android:label="shop"
+        tools:layout="@layout/fragment_shop" />
 
 </navigation>

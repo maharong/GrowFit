@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="12dp"
+    android:backgroundTint="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
+
+        <!-- 텍스트 영역 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textPresetName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Morning Stretch"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"
+                android:textColor="#2B3A30"/>
+
+            <TextView
+                android:id="@+id/textPresetInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5 steps"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp"
+                android:fontFamily="monospace"
+                android:textColor="#586B62"/>
+        </LinearLayout>
+
+        <!-- 삭제 버튼 -->
+        <ImageButton
+            android:id="@+id/btnDeletePreset"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_close"
+            android:contentDescription="Delete preset"
+            app:tint="#B00020"/>
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

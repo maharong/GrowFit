@@ -25,6 +25,6 @@ interface PresetDao {
     suspend fun getPresetWithSteps(presetId: String): PresetWithSteps?
 
     @Transaction
-    @Query("SELECT * FROM preset")
+    @Query("SELECT * FROM preset ORDER BY createdAt ASC")
     suspend fun getAllPresetsWithSteps(): List<PresetWithSteps>
 }

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.github.maharong.growfit.databinding.FragmentHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -96,22 +97,22 @@ class HomeFragment : Fragment() {
 
         // 프리셋 선택
         binding.btnPreset.setOnClickListener {
-            // TODO: NavController 연결
+            findNavController().navigate(R.id.presetListFragment)
         }
 
         // 운동 시작
         binding.btnStart.setOnClickListener {
-            // TODO: 운동 타이머 화면 이동
+            findNavController().navigate(R.id.runFragment)
         }
 
         // SHOP (스킨 구매)
         binding.btnShop.setOnClickListener {
-            // TODO: 상점 화면 이동
+            findNavController().navigate(R.id.shopFragment)
         }
 
         // 설정
         binding.btnSettings.setOnClickListener {
-            // TODO: 설정 화면 이동
+            findNavController().navigate(R.id.settingsFragment)
         }
     }
 

@@ -35,7 +35,9 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "growfit-db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration(true)
+            .build()
     }
 
     /**
