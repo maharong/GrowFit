@@ -58,10 +58,13 @@ class PresetListViewModel @Inject constructor(
                 )
             }
 
+            val selectedId = userStateManager.getSelectedPresetId()
+
             _uiState.update { state ->
                 state.copy(
                     presets = items,
-                    isLoading = false
+                    isLoading = false,
+                    currentPresetId = selectedId
                 )
             }
         }

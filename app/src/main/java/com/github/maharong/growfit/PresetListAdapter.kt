@@ -1,6 +1,5 @@
 package com.github.maharong.growfit
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -77,17 +76,17 @@ class PresetListAdapter(
             val baseInfo = "${item.stepCount} steps"
             binding.textPresetInfo.text = when {
                 isTemp   -> "$baseInfo · SELECTING"
-                isCurrent -> "$baseInfo · TODAY"
                 else     -> baseInfo
             }
 
             // 선택 상태별 배경 색 (CardView)
             val card = binding.root
             val normalColor  = "#FFFFFF".toColorInt()   // 기본 흰색
-            val currentColor = "#F0E9FF".toColorInt()   // 이미 선택된 프리셋 (연보라)
+            val currentColor = "#E7D7FF".toColorInt()   // 오늘 프리셋 (밝은 연두색)
             val tempColor    = "#E0E0E0".toColorInt()   // 임시 선택 (회색)
 
             val bgColor = when {
+                isTemp && isCurrent -> currentColor
                 isTemp -> tempColor
                 isCurrent -> currentColor
                 else -> normalColor

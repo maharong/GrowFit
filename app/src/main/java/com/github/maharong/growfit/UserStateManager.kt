@@ -44,6 +44,10 @@ class UserStateManager(
         return repo.load()
     }
 
+    suspend fun getSelectedPresetId(): String? {
+        return repo.load().selectedPresetId
+    }
+
     // 프리셋 완료 시 경험치, 포인트 지급
     suspend fun onPresetCompleted() {
         val todayDate = dateProvider()
