@@ -18,7 +18,14 @@ interface PresetDao {
     @Update
     suspend fun updateStep(step: PresetStepEntity)
 
-    @Delete suspend fun deletePreset(preset: PresetEntity)
+    @Delete
+    suspend fun deletePreset(preset: PresetEntity)
+
+    @Delete
+    suspend fun deleteStep(step: PresetStepEntity)
+
+    @Query("DELETE FROM preset_step WHERE presetId = :presetId")
+    suspend fun deleteStepsByPresetId(presetId: String)
 
     @Transaction
     @Query("SELECT * FROM preset WHERE id = :presetId")

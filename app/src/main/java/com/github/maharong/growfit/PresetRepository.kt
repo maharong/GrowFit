@@ -13,7 +13,7 @@ class PresetRepository @Inject constructor(
      * @param name 프리셋 이름
      * @param steps UI에서 구성한 스텝 정보
      *              - id, presetId는 여기서 채우므로
-     *                order, type, durationSec, count, stepGoal만 신경쓰면 됨
+     *                order, type, name(스텝 이름), durationSec, count, stepGoal만 신경쓰면 됨
      * @return 생성된 프리셋의 UUID (id)
      */
     suspend fun createPreset(
@@ -89,4 +89,40 @@ class PresetRepository @Inject constructor(
      */
     suspend fun getPresetName(presetId: String): String? =
         dao.getPresetWithSteps(presetId)?.preset?.name
+
+    /**
+     * 프리셋 이름 및 스텝 전체를 동기화.
+     */
+    suspend fun savePresetWithSteps(
+        presetId: String,
+        name: String,
+        steps: List<PresetStepEntity>
+    ) {
+        // 기존 프리셋 + 스텝 로드
+        val existing = dao.getPresetWithSteps(presetId) ?: return
+        val existingSteps = existing.steps
+        val existingIds = existingSteps.map { it.id }.toSet()
+        val newIds = steps.map { it.id }.toSet()
+
+        // 프리셋 이름/업데이트 시간 갱신
+        dao.updatePreset(
+            existing.preset.copy(
+                name = name,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+
+        // 새로 추가된 스텝은 insert, 기존 스텝은 update
+        steps.forEach { step ->
+            if (step.id in existingIds) {
+                dao.updateStep(step)
+            } else {
+                dao.insertStep(step)
+            }
+        }
+
+        // UI에서 사라진 스텝은 delete
+        val toDelete = existingSteps.filter { it.id !in newIds }
+        toDelete.forEach { dao.deleteStep(it) }
+    }
 }

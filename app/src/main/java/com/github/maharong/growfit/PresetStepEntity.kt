@@ -19,10 +19,11 @@ import java.util.UUID
     indices = [Index("presetId")]
 )
 data class PresetStepEntity(
-    @PrimaryKey val id: String, // UUID
+    @PrimaryKey val id: String = UUID.randomUUID().toString(), // UUID
     val presetId: String, // 어떤 프리셋의 스텝인지
     val order: Int, // 프리셋 내 순서
     val type: StepType, // 운동 타입 (운동, 휴식, 걷기/달리기 등)
+    val name: String = "", // 스텝 이름 (예: 푸시업, 풀업 등)
     val durationSec: Int?, // 시간 기반 스텝
     val count: Int?, // 횟수 기반 스텝
     val stepGoal: Int? // 걸음 기반 목표 (걷기/달리기)

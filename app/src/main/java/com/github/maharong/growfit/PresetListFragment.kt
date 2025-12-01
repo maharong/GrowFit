@@ -89,7 +89,7 @@ class PresetListFragment : Fragment() {
             )
         }
 
-        // ADD 버튼: 새 프리셋 생성 후, 나중에 편집 화면으로 이동 예정
+        // ADD 버튼: 새 프리셋 생성 후, 편집 화면으로 이동
         binding.btnAddPreset.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 val newId = viewModel.createEmptyPreset()
@@ -128,6 +128,12 @@ class PresetListFragment : Fragment() {
                 adapter.submitList(state.presets)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 리스트 화면 갱신
+        viewModel.loadPresets()
     }
 
     override fun onDestroyView() {

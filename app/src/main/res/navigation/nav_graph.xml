@@ -16,6 +16,7 @@
         android:name="com.github.maharong.growfit.PresetListFragment"
         android:label="preset_list"
         tools:layout="@layout/fragment_preset_list">
+        <!-- 프리셋 목록 -> 프리셋 편집 -->
         <action
             android:id="@+id/action_presetListFragment_to_presetEditFragment"
             app:destination="@id/presetEditFragment" />
@@ -31,13 +32,32 @@
             android:name="presetId"
             app:argType="string"
             app:nullable="true" />
+
+        <!-- 프리셋 편집 -> 스텝 편집 -->
+        <action
+            android:id="@+id/action_presetEditFragment_to_stepEditFragment"
+            app:destination="@id/stepEditFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/stepEditFragment"
         android:name="com.github.maharong.growfit.StepEditFragment"
         android:label="step_edit"
-        tools:layout="@layout/fragment_step_edit" />
+        tools:layout="@layout/fragment_step_edit">
+        <!-- 프리셋 id -->
+        <argument
+            android:name="presetId"
+            app:argType="string" />
+        <!-- 스텝 id -->
+        <argument
+            android:name="stepId"
+            app:argType="string" />
+        <!-- 새로 생성한 스텝인지 여부 (기본 false) -->
+        <argument
+            android:name="isNew"
+            app:argType="boolean"
+            android:defaultValue="false" />
+    </fragment>
 
     <fragment
         android:id="@+id/runFragment"
