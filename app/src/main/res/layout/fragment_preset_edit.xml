@@ -92,8 +92,10 @@
                         android:layout_height="40dp"
                         android:layout_marginTop="4dp"
                         android:layout_marginEnd="8dp"
+                        android:autofillHints=""
                         android:background="@android:color/transparent"
                         android:fontFamily="monospace"
+                        android:inputType="text"
                         android:textColor="#2B3A30"
                         android:textColorHint="#6C8C78"
                         android:hint="Enter preset name"
@@ -202,7 +204,7 @@
                     app:backgroundTint="#7358C4"
                     app:tint="#FFFFFF" />
 
-                <!-- STEP 편집/정렬 (향후 기능용) -->
+                <!-- STEP 편집/정렬 -->
                 <ImageButton
                     android:id="@+id/btnEditSteps"
                     android:layout_width="56dp"

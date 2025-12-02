@@ -25,10 +25,14 @@ class PresetEditViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PresetEditUiState())
     val uiState: StateFlow<PresetEditUiState> = _uiState
 
-    private var isLoaded = false
+    // 어떤 프리셋을 로드했는지 추적
+    private var loadedPresetId: String? = null
 
     fun load(presetId: String) {
-        if (isLoaded) return
+        // 이미 로딩했던 프리셋은 다시 로드 안함
+        if (loadedPresetId == presetId && _uiState.value.presetId == presetId) {
+            return
+        }
 
         viewModelScope.launch {
             val data = repo.getPresetWithSteps(presetId) ?: return@launch
@@ -37,7 +41,7 @@ class PresetEditViewModel @Inject constructor(
                 name = data.preset.name,
                 steps = data.steps.sortedBy { it.order }
             )
-            isLoaded = true
+            loadedPresetId = presetId
         }
     }
 
@@ -98,5 +102,10 @@ class PresetEditViewModel @Inject constructor(
 
             state.copy(steps = reOrdered)
         }
+    }
+
+    fun clearSession() {
+        loadedPresetId = null
+        _uiState.value = PresetEditUiState()
     }
 }

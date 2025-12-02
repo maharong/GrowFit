@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -23,7 +23,7 @@ class PresetEditFragment : Fragment() {
     private var _binding: FragmentPresetEditBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: PresetEditViewModel by viewModels()
+    private val viewModel: PresetEditViewModel by activityViewModels()
 
     private lateinit var adapter: PresetStepAdapter
 
@@ -57,6 +57,10 @@ class PresetEditFragment : Fragment() {
                 }
                 adapter.selectedStepId = state.selectedStepId
                 adapter.submitList(state.steps)
+
+                val hasSteps = state.steps.isNotEmpty()
+                binding.recyclerSteps.visibility = if (hasSteps) View.VISIBLE else View.GONE
+                binding.textEmptySteps.visibility = if (hasSteps) View.GONE else View.VISIBLE
             }
         }
     }
@@ -119,16 +123,38 @@ class PresetEditFragment : Fragment() {
                 count = null,
                 stepGoal = null
             )
-            // id는 안 넘겼으니 UUID가 자동 생성됨
 
             viewModel.addStep(newStep)
 
-            // 이 다음에 newStep.id를 들고 스텝 편집 화면으로 이동하면 됨
+            // 새 스텝의 UUID를 들고 스텝 편집 화면으로 이동
             val action = PresetEditFragmentDirections
                 .actionPresetEditFragmentToStepEditFragment(
                     presetId = state.presetId,
                     stepId = newStep.id,
                     isNew = true
+                )
+            findNavController().navigate(action)
+        }
+
+        // 스텝 편집 버튼
+        binding.btnEditSteps.setOnClickListener {
+            val state = viewModel.uiState.value
+            val stepId = state.selectedStepId
+
+            if (stepId == null) {
+                Toast.makeText(
+                    requireContext(),
+                    "편집할 스텝을 먼저 선택해 주세요.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            val action = PresetEditFragmentDirections
+                .actionPresetEditFragmentToStepEditFragment(
+                    presetId = state.presetId,
+                    stepId = stepId,
+                    isNew = false
                 )
             findNavController().navigate(action)
         }
@@ -152,5 +178,10 @@ class PresetEditFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.clearSession()
     }
 }

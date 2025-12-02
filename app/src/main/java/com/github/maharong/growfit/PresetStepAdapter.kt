@@ -83,7 +83,7 @@ class PresetStepAdapter(
             val detail = when (step.type) {
                 StepType.TIME -> {
                     step.durationSec?.takeIf { it > 0 }?.let { sec ->
-                        "${sec}s"
+                        formatSeconds(sec)
                     } ?: "-"
                 }
                 StepType.COUNT -> {
@@ -93,7 +93,7 @@ class PresetStepAdapter(
                 }
                 StepType.REST -> {
                     step.durationSec?.takeIf { it > 0 }?.let { sec ->
-                        "${sec}s"
+                        formatSeconds(sec)
                     } ?: "-"
                 }
                 StepType.WALKING, StepType.RUNNING -> {
@@ -102,7 +102,7 @@ class PresetStepAdapter(
                             "${step.stepGoal} steps"
                         }
                         step.durationSec?.takeIf { it > 0 } != null -> {
-                            "${step.durationSec}s"
+                            formatSeconds(step.durationSec)
                         }
                         else -> "-"
                     }
@@ -137,6 +137,21 @@ class PresetStepAdapter(
             binding.btnDeleteStep.setOnClickListener {
                 onDeleteClick(step)
             }
+        }
+    }
+
+    private fun formatSeconds(sec: Int): String {
+        if (sec <= 0) return "-"
+        val h = sec / 3600
+        val m = (sec % 3600) / 60
+        val s = sec % 60
+        return when {
+            h > 0 && m > 0 && s > 0 -> "${h}h ${m}m ${s}s"
+            h > 0 && m > 0          -> "${h}h ${m}m"
+            h > 0                  -> "${h}h"
+            m > 0 && s > 0         -> "${m}m ${s}s"
+            m > 0                  -> "${m}m"
+            else                   -> "${s}s"
         }
     }
 
