@@ -27,7 +27,8 @@ data class HomeUiState(
     val maxExpForLevel: Int = 100,
 
     val presetName: String? = null,
-    val todayComplete: Boolean = false
+    val todayComplete: Boolean = false,
+    val hasPreset: Boolean = false
 )
 
 /**
@@ -76,7 +77,8 @@ class HomeViewModel @Inject constructor(
                 minExpForLevel = minExp,
                 maxExpForLevel = maxExp,
                 presetName = presetName,
-                todayComplete = state.todayComplete
+                todayComplete = state.todayComplete,
+                hasPreset = !presetName.isNullOrBlank()
             )
         }
     }
@@ -103,7 +105,8 @@ class HomeViewModel @Inject constructor(
                 minExpForLevel = minExp,
                 maxExpForLevel = maxExp,
                 presetName = presetName,
-                todayComplete = state.todayComplete
+                todayComplete = state.todayComplete,
+                hasPreset = !presetName.isNullOrBlank()
             )
         }
     }

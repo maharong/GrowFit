@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -51,6 +53,20 @@ class StepEditFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // 시스템 뒤로가기 처리
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (isNew) {
+                        showExitWarningDialog()
+                    } else {
+                        findNavController().popBackStack()
+                    }
+                }
+            }
+        )
 
         setupStepTypeSpinner()
         setupButtons()
@@ -102,8 +118,11 @@ class StepEditFragment : Fragment() {
 
                 val step = state.steps.find { it.id == stepId }
                 if (step == null) {
-                    toast("스텝을 찾을 수 없습니다.")
-                    findNavController().popBackStack()
+                    // 새 스텝인 경우에는 우리가 의도적으로 삭제한 것일 수 있으므로 조용히 빠져나감
+                    if (!isNew) {
+                        toast("스텝을 찾을 수 없습니다.")
+                        findNavController().popBackStack()
+                    }
                     return@collectLatest
                 }
 
@@ -115,6 +134,19 @@ class StepEditFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun showExitWarningDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("스텝 편집 종료")
+            .setMessage("입력한 내용이 저장되지 않을 수 있습니다.\n정말 나가시겠습니까?")
+            .setPositiveButton("나가기") { _, _ ->
+                // 새 스텝이면 삭제
+                presetEditViewModel.deleteStep(stepId)
+                findNavController().popBackStack()
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
 
     private fun bindStepToUi(step: PresetStepEntity) {
@@ -156,7 +188,11 @@ class StepEditFragment : Fragment() {
         }
 
         binding.btnCancelStep.setOnClickListener {
-            findNavController().popBackStack()
+            if (isNew) {
+                showExitWarningDialog()
+            } else {
+                findNavController().popBackStack()
+            }
         }
 
         binding.btnSaveStep.setOnClickListener {
@@ -201,7 +237,6 @@ class StepEditFragment : Fragment() {
                     // TIME 모드 → duration만
                     showDuration(true)
                     showStepGoal(false)
-                    // 서로 배타
                     binding.editStepGoal.setText("")
                 } else {
                     // STEPS 모드 → stepGoal만
@@ -242,55 +277,49 @@ class StepEditFragment : Fragment() {
         val name = binding.editStepName.text.toString().trim()
         val selectedType = StepType.entries[binding.spinnerStepType.selectedItemPosition]
 
-        val durationSec = binding.editDurationSec.text.toString()
-            .toIntOrNull()?.takeIf { it > 0 }
-        val count = binding.editCount.text.toString()
-            .toIntOrNull()?.takeIf { it > 0 }
-        val stepGoal = binding.editStepGoal.text.toString()
-            .toIntOrNull()?.takeIf { it > 0 }
-
-        val (finalDuration, finalCount, finalGoal) = when (selectedType) {
-            StepType.TIME -> {
-                if (durationSec == null) {
-                    toast("지속시간을 입력해 주세요.")
-                    return
-                }
-                Triple(durationSec, null, null)
-            }
-
-            StepType.REST -> {
-                if (durationSec == null) {
-                    toast("휴식 시간을 입력해 주세요.")
-                    return
-                }
-                Triple(durationSec, null, null)
-            }
-
-            StepType.COUNT -> {
-                if (count == null) {
-                    toast("횟수를 입력해 주세요.")
-                    return
-                }
-                Triple(null, count, null)
-            }
-
-            StepType.WALKING, StepType.RUNNING -> {
-                val useTimeMode = binding.radioModeTime.isChecked
-                if (useTimeMode) {
-                    if (durationSec == null) {
-                        toast("지속시간을 입력해 주세요.")
-                        return
-                    }
+        val (finalDuration, finalCount, finalGoal) =
+            when (selectedType) {
+                StepType.TIME -> {
+                    val durationSec = parsePositiveInt(
+                        binding.editDurationSec.text.toString(),
+                        "지속시간"
+                    ) ?: return
                     Triple(durationSec, null, null)
-                } else {
-                    if (stepGoal == null) {
-                        toast("걸음 수를 입력해 주세요.")
-                        return
+                }
+
+                StepType.REST -> {
+                    val durationSec = parsePositiveInt(
+                        binding.editDurationSec.text.toString(),
+                        "휴식 시간"
+                    ) ?: return
+                    Triple(durationSec, null, null)
+                }
+
+                StepType.COUNT -> {
+                    val count = parsePositiveInt(
+                        binding.editCount.text.toString(),
+                        "횟수"
+                    ) ?: return
+                    Triple(null, count, null)
+                }
+
+                StepType.WALKING, StepType.RUNNING -> {
+                    val useTimeMode = binding.radioModeTime.isChecked
+                    if (useTimeMode) {
+                        val durationSec = parsePositiveInt(
+                            binding.editDurationSec.text.toString(),
+                            "지속시간"
+                        ) ?: return
+                        Triple(durationSec, null, null)
+                    } else {
+                        val stepGoal = parsePositiveInt(
+                            binding.editStepGoal.text.toString(),
+                            "걸음 수"
+                        ) ?: return
+                        Triple(null, null, stepGoal)
                     }
-                    Triple(null, null, stepGoal)
                 }
             }
-        }
 
         val updated = base.copy(
             type = selectedType,
@@ -299,6 +328,9 @@ class StepEditFragment : Fragment() {
             count = finalCount,
             stepGoal = finalGoal
         )
+
+        // 한 번이라도 저장이 성공하면, 이 프래그먼트 생명주기 안에서는 새 스텝이 아니라는 의미로 플래그 내려줌
+        isNew = false
 
         presetEditViewModel.updateStep(updated)
         toast("스텝이 수정되었습니다.")
@@ -312,5 +344,14 @@ class StepEditFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun parsePositiveInt(input: String, fieldName: String): Int? {
+        val value = input.toIntOrNull()
+        if (value == null || value < 1) {
+            toast("$fieldName 은(는) 최소 1 이상이어야 합니다.")
+            return null
+        }
+        return value
     }
 }

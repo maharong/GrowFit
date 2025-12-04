@@ -1,14 +1,259 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RunFragment">
+    android:background="#1F1F1F">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+    <!-- 로딩 스피너 -->
+    <ProgressBar
+        android:id="@+id/progressLoading"
+        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</FrameLayout>
+    <!-- 레트로 게임기 프레임 -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/deviceFrame"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        android:backgroundTint="#F4E4C6"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="10dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/groupContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp">
+
+            <!-- 상단 타이틀 -->
+            <TextView
+                android:id="@+id/txtLogo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GROWFIT RUN"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"
+                android:textColor="#333333"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <!-- 프리셋 이름 -->
+            <TextView
+                android:id="@+id/textPresetName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="PRESET: -"
+                android:textSize="16sp"
+                android:fontFamily="monospace"
+                android:textColor="#555555"
+                app:layout_constraintTop_toBottomOf="@id/txtLogo"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- 하단 버튼 줄 -->
+            <LinearLayout
+                android:id="@+id/buttonRow"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="4dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <Button
+                    android:id="@+id/btnPause"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="일시정지"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:fontFamily="monospace"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_start" />
+
+                <Button
+                    android:id="@+id/btnNextStep"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="다음 스텝으로"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:fontFamily="monospace"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_start" />
+            </LinearLayout>
+
+            <!-- LCD 화면 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/lcdScreen"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="#D0E8D2"
+                app:cardCornerRadius="18dp"
+                app:layout_constraintTop_toBottomOf="@id/textPresetName"
+                app:layout_constraintBottom_toTopOf="@id/buttonRow"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="12dp">
+
+                    <!-- STEP 인덱스 -->
+                    <TextView
+                        android:id="@+id/textStepTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="STEP 1 / 5"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:textColor="#2B3A30"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent" />
+
+                    <!-- 현재 스텝 이름 (크기 증가) -->
+                    <TextView
+                        android:id="@+id/textStepName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="준비운동"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:textColor="#233028"
+                        android:gravity="center"
+                        app:layout_constraintTop_toBottomOf="@id/textStepTitle"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent" />
+
+                    <!-- STEP 상세 (선택) -->
+                    <TextView
+                        android:id="@+id/textStepDetail"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:textColor="#385645"
+                        android:layout_marginTop="4dp"
+                        app:layout_constraintTop_toBottomOf="@id/textStepName"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent" />
+
+                    <!-- 큰 타이머 -->
+                    <TextView
+                        android:id="@+id/textTimer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="00:30"
+                        android:textSize="56sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:textColor="#1F3A2C"
+                        app:layout_constraintTop_toBottomOf="@id/textStepDetail"
+                        app:layout_constraintBottom_toTopOf="@id/textNextStepInfo"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintVertical_bias="0.45" />
+
+                    <!-- 걸음 정보 (WALK/RUN) -->
+                    <TextView
+                        android:id="@+id/textWalkInfo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="목표: 1000보 / 현재: 0보"
+                        android:textSize="18sp"
+                        android:fontFamily="monospace"
+                        android:textColor="#2B3A30"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:layout_marginTop="12dp"
+                        app:layout_constraintTop_toBottomOf="@id/textTimer"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/textNextStepInfo" />
+
+                    <!-- 횟수 정보 (COUNT) -->
+                    <TextView
+                        android:id="@+id/textCountInfo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="목표 횟수: 10회"
+                        android:textSize="18sp"
+                        android:fontFamily="monospace"
+                        android:textColor="#2B3A30"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:layout_marginTop="12dp"
+                        app:layout_constraintTop_toBottomOf="@id/textTimer"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/textNextStepInfo" />
+
+                    <!-- 다음 스텝 안내 (크기 증가 + 간격 확대) -->
+                    <TextView
+                        android:id="@+id/textNextStepInfo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="NEXT: 팔굽혀펴기"
+                        android:textSize="18sp"
+                        android:fontFamily="monospace"
+                        android:textColor="#385645"
+                        android:gravity="center"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="20dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/textGuide" />
+
+                    <!-- 하단 가이드 -->
+                    <TextView
+                        android:id="@+id/textGuide"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="마지막 5초 전에 진동으로 알려드려요."
+                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:textColor="#385645"
+                        android:layout_marginBottom="8dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
