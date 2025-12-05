@@ -34,12 +34,19 @@ class RunViewModel @Inject constructor(
         val rewardMessage: String = "",
         val streakMessage: String = "",
         val commentMessage: String = "",
-        val alreadyRewarded: Boolean = false
+        val alreadyRewarded: Boolean = false,
+        // 설정 값
+        val vibrateEnabled: Boolean = true,
+        val vibrateLastSecondsEnabled: Boolean = true,
+        val vibrateOnStepChange: Boolean = true,
+        val vibrateOnPresetComplete: Boolean = true,
+        val vibrateLastSeconds: Int = 5
     )
 
     sealed class RunEvent {
         object PreAlert : RunEvent()           // n초 전 진동
-        object RoutineFinished : RunEvent()    // 루틴 전체 완료
+        object RoutineFinished : RunEvent()    // 프리셋 전체 완료
+        object StepChanged : RunEvent() // 스텝 변경
         data class Error(val message: String) : RunEvent()
     }
 
@@ -50,7 +57,6 @@ class RunViewModel @Inject constructor(
     val events: SharedFlow<RunEvent> = _events
 
     private var timerJob: Job? = null
-    private val preAlertSeconds = 5  // n초 전 (추후 설정값으로 빼도 됨)
 
     fun start() {
         // 이미 시작했다면 다시 안함
@@ -58,6 +64,8 @@ class RunViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                val userState = userStateManager.getCurrentState()
+
                 val selectedId = userStateManager.getSelectedPresetId()
                 if (selectedId == null) {
                     _events.emit(RunEvent.Error("선택된 프리셋이 없습니다."))
@@ -81,7 +89,12 @@ class RunViewModel @Inject constructor(
                     remainingSeconds = sortedSteps[0].durationSec,
                     currentStepsTaken = 0,
                     isFinished = false,
-                    isPaused = false
+                    isPaused = false,
+                    vibrateEnabled = userState.vibrateEnabled,
+                    vibrateLastSecondsEnabled = userState.vibrateLastSecondsEnabled,
+                    vibrateOnStepChange = userState.vibrateOnStepChange,
+                    vibrateOnPresetComplete = userState.vibrateOnPresetComplete,
+                    vibrateLastSeconds = userState.vibrateLastSeconds
                 )
 
                 startTimerIfNeeded(sortedSteps[0])
@@ -108,10 +121,19 @@ class RunViewModel @Inject constructor(
                         continue
                     }
 
+                    val current = _uiState.value
                     _uiState.update { it.copy(remainingSeconds = remaining) }
 
-                    if (remaining == preAlertSeconds) {
-                        _events.emit(RunEvent.PreAlert)
+
+                    if (current.vibrateEnabled && current.vibrateLastSecondsEnabled) {
+                        // 마지막 n초 전 진동 설정값이 스텝 설정보다 높은 경우 스텝에 맞춰 조절
+                        val preAlertSeconds = current.vibrateLastSeconds
+                            .coerceAtLeast(1)
+                            .coerceAtMost(duration)
+
+                        if (remaining == preAlertSeconds) {
+                            _events.emit(RunEvent.PreAlert)
+                        }
                     }
 
                     delay(1000L)
@@ -121,7 +143,7 @@ class RunViewModel @Inject constructor(
                 // 타이머 끝 -> 자동 다음 스텝
                 moveToNextStep()
             } catch (_: CancellationException) {
-                // timer 취소되면 여기로 빠짐 -> 아무것도 안 함
+                // no-op
             }
         }
     }
@@ -158,7 +180,11 @@ class RunViewModel @Inject constructor(
                         alreadyRewarded = result.alreadyReceived
                     )
                 }
-                _events.emit(RunEvent.RoutineFinished)
+                // 프리셋 완료 시 진동
+                val ui = _uiState.value
+                if (ui.vibrateEnabled && ui.vibrateOnPresetComplete) {
+                    _events.emit(RunEvent.RoutineFinished)
+                }
             }
             return
         }
@@ -172,6 +198,13 @@ class RunViewModel @Inject constructor(
                 currentStepsTaken = 0,
                 isPaused = false
             )
+        }
+        // 스텝 변경 진동
+        val ui = _uiState.value
+        if (ui.vibrateEnabled && ui.vibrateOnStepChange) {
+            viewModelScope.launch {
+                _events.emit(RunEvent.StepChanged)
+            }
         }
 
         startTimerIfNeeded(nextStep)

@@ -232,12 +232,21 @@ class RunFragment : Fragment() {
                         val remain = state.remainingSeconds ?: step.durationSec ?: 0
                         binding.textTimer.text = formatSeconds(remain)
 
-                        // 시간 기반은 자동 진행 → next 버튼 숨김, pause 버튼 사용
+                        // 시간 기반은 자동 진행 -> next 버튼 숨김, pause 버튼 사용
                         binding.btnNextStep.visibility = View.GONE
                         binding.btnPause.visibility = View.VISIBLE
                         binding.btnPause.text = if (state.isPaused) "재개" else "일시정지"
 
-                        binding.textGuide.text = "마지막 ${5}초 전에 진동으로 알려드려요."
+                        val duration = step.durationSec ?: 0
+                        if (state.vibrateEnabled && state.vibrateLastSecondsEnabled && duration > 0) {
+                            val effectiveN = state.vibrateLastSeconds
+                                .coerceAtLeast(1)
+                                .coerceAtMost(duration)
+
+                            binding.textGuide.text = "마지막 ${effectiveN}초 전에 진동으로 알려드려요."
+                        } else {
+                            binding.textGuide.text = "타이머가 끝나면 자동으로 다음 스텝으로 넘어가요."
+                        }
                     }
 
                     StepType.COUNT -> {
@@ -306,9 +315,15 @@ class RunFragment : Fragment() {
             viewModel.events.collect { event ->
                 when (event) {
                     is RunViewModel.RunEvent.PreAlert -> {
+                        // 마지막 N초 전 진동
+                        vibrate()
+                    }
+                    is RunViewModel.RunEvent.StepChanged -> {
+                        // 스텝 변경 진동: 짧게 한 번
                         vibrate()
                     }
                     is RunViewModel.RunEvent.RoutineFinished -> {
+                        // 프리셋 완료 진동 패턴
                         vibrateFinishPattern()
                     }
                     is RunViewModel.RunEvent.Error -> {

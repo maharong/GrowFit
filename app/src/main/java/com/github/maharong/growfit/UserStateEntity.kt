@@ -12,5 +12,11 @@ data class UserStateEntity(
     var skinId: Int = 0, // 적용된 스킨 id
     var selectedPresetId: String? = null, // 선택된 프리셋 ID
     var todayComplete: Boolean = false, // 오늘 운동 완료 여부
-    var streakDays: Int = 0 // 연속 운동일
+    var streakDays: Int = 0, // 연속 운동일
+    // 진동 설정
+    var vibrateEnabled: Boolean = true,               // 전체 진동 on/off
+    var vibrateLastSecondsEnabled: Boolean = true,    // 마지막 n초 전 진동 on/off
+    var vibrateOnStepChange: Boolean = true,          // 다음 스텝 넘어갈 때 진동
+    var vibrateOnPresetComplete: Boolean = true,      // 프리셋 완료 시 진동
+    var vibrateLastSeconds: Int = 5                   // 마지막 n초의 n 값
 )

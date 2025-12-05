@@ -1,59 +1,114 @@
 package com.github.maharong.growfit
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import com.github.maharong.growfit.databinding.FragmentSettingsBinding
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [SettingsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+@AndroidEntryPoint
 class SettingsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private var _binding: FragmentSettingsBinding? = null
+    private val binding get() = _binding!!
+
+    private val viewModel: SettingsViewModel by viewModels()
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        observeUi()
+        setupListeners()
+    }
+
+    private fun observeUi() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState.collectLatest { state ->
+                if (!state.isLoaded) return@collectLatest
+
+                // 전체 진동
+                if (binding.switchVibrateOverall.isChecked != state.vibrateEnabled) {
+                    binding.switchVibrateOverall.isChecked = state.vibrateEnabled
+                }
+
+                // 마지막 N초 전 진동 텍스트를 동적으로 설정
+                val lastSecondsText = "마지막 ${state.vibrateLastSeconds}초 전 진동"
+                if (binding.switchVibrateLastSeconds.text != lastSecondsText) {
+                    binding.switchVibrateLastSeconds.text = lastSecondsText
+                }
+
+                if (binding.switchVibrateLastSeconds.isChecked != state.vibrateLastSecondsEnabled) {
+                    binding.switchVibrateLastSeconds.isChecked = state.vibrateLastSecondsEnabled
+                }
+
+                if (binding.switchVibrateStepChange.isChecked != state.vibrateOnStepChange) {
+                    binding.switchVibrateStepChange.isChecked = state.vibrateOnStepChange
+                }
+
+                if (binding.switchVibratePresetComplete.isChecked != state.vibrateOnPresetComplete) {
+                    binding.switchVibratePresetComplete.isChecked = state.vibrateOnPresetComplete
+                }
+
+                val currentText = binding.editLastSeconds.text?.toString() ?: ""
+                val targetText = state.vibrateLastSeconds.toString()
+                if (currentText != targetText) {
+                    binding.editLastSeconds.setText(targetText)
+                }
+
+                // 전체 진동이 꺼져 있으면 하위 항목 비활성화
+                val enabled = state.vibrateEnabled
+                binding.switchVibrateLastSeconds.isEnabled = enabled
+                binding.switchVibrateStepChange.isEnabled = enabled
+                binding.switchVibratePresetComplete.isEnabled = enabled
+                binding.editLastSeconds.isEnabled = enabled && state.vibrateLastSecondsEnabled
+            }
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_settings, container, false)
+    private fun setupListeners() {
+        binding.switchVibrateOverall.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setVibrateEnabled(isChecked)
+        }
+
+        binding.switchVibrateLastSeconds.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setLastSecondsEnabled(isChecked)
+        }
+
+        binding.switchVibrateStepChange.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setStepChangeEnabled(isChecked)
+        }
+
+        binding.switchVibratePresetComplete.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setPresetCompleteEnabled(isChecked)
+        }
+
+        binding.editLastSeconds.addTextChangedListener { editable ->
+            val text = editable?.toString().orEmpty()
+            val value = text.toIntOrNull()
+            if (value != null) {
+                viewModel.setLastSeconds(value)
+            }
+        }
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SettingsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SettingsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
