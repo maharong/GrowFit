@@ -69,7 +69,7 @@
             <LinearLayout
                 android:id="@+id/buttonRow"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="56dp"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="4dp"
                 android:gravity="center"
@@ -78,11 +78,11 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
+                <!-- 일시정지 / 재개 버튼 -->
                 <Button
                     android:id="@+id/btnPause"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="일시정지"
                     android:textStyle="bold"
@@ -91,11 +91,11 @@
                     android:textColor="#FFFFFF"
                     android:background="@drawable/bg_btn_start" />
 
+                <!-- 다음 스텝 / 홈으로 버튼 -->
                 <Button
                     android:id="@+id/btnNextStep"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="다음 스텝으로"
                     android:textStyle="bold"
@@ -124,6 +124,8 @@
                     android:layout_height="match_parent"
                     android:padding="12dp">
 
+                    <!-- 러닝 모드 뷰 -->
+
                     <!-- STEP 인덱스 -->
                     <TextView
                         android:id="@+id/textStepTitle"
@@ -140,7 +142,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent" />
 
-                    <!-- 현재 스텝 이름 (크기 증가) -->
+                    <!-- 현재 스텝 이름 -->
                     <TextView
                         android:id="@+id/textStepName"
                         android:layout_width="0dp"
@@ -156,7 +158,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent" />
 
-                    <!-- STEP 상세 (선택) -->
+                    <!-- STEP 상세 -->
                     <TextView
                         android:id="@+id/textStepDetail"
                         android:layout_width="0dp"
@@ -220,7 +222,7 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintBottom_toTopOf="@id/textNextStepInfo" />
 
-                    <!-- 다음 스텝 안내 (크기 증가 + 간격 확대) -->
+                    <!-- 다음 스텝 안내 -->
                     <TextView
                         android:id="@+id/textNextStepInfo"
                         android:layout_width="0dp"
@@ -249,6 +251,119 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <!-- 러닝 모드 뷰 그룹 -->
+                    <androidx.constraintlayout.widget.Group
+                        android:id="@+id/groupRunMode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:constraint_referenced_ids="textStepTitle,textStepName,textStepDetail,textTimer,textWalkInfo,textCountInfo,textNextStepInfo,textGuide" />
+
+                    <!-- 완료 화면 전용 레이아웃 -->
+                    <LinearLayout
+                        android:id="@+id/layoutComplete"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="20dp"
+                        android:paddingTop="24dp"
+                        android:paddingBottom="24dp"
+                        android:visibility="gone"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <!-- 운동 완료 텍스트 -->
+                        <TextView
+                            android:id="@+id/textCompleteTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="운동 완료!"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:fontFamily="monospace"
+                            android:textColor="#2B3A30"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- 위쪽 여백(운동 완료와 아래 내용 사이 공간) -->
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <!-- 오늘의 보상 영역 -->
+                        <LinearLayout
+                            android:id="@+id/layoutRewardBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center_horizontal"
+                            android:padding="8dp">
+
+                            <!-- 작은 라벨 느낌으로 "오늘의 보상" -->
+                            <TextView
+                                android:id="@+id/textCompleteRewardLabel"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="오늘의 보상"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:fontFamily="monospace"
+                                android:textColor="#506050"
+                                android:gravity="center"
+                                android:layout_marginBottom="8dp" />
+
+                            <!-- 실제 보상 문구 -->
+                            <TextView
+                                android:id="@+id/textCompleteRewardMessage"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="오늘 보상은 이미 받았어요."
+                                android:textSize="18sp"
+                                android:fontFamily="monospace"
+                                android:textColor="#2B3A30"
+                                android:gravity="center" />
+                        </LinearLayout>
+
+                        <!-- 중간 여백 -->
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <!-- 연속 운동일 문구 -->
+                        <TextView
+                            android:id="@+id/textCompleteStreak"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="오늘부터 1일차! 좋은 시작이에요."
+                            android:textSize="16sp"
+                            android:fontFamily="monospace"
+                            android:textColor="#2B3A30"
+                            android:gravity="center"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- 동기부여 코멘트 -->
+                        <TextView
+                            android:id="@+id/textCompleteComment"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="오늘은 이미 멋지게 해냈어요. 내일도 같이 해봐요!"
+                            android:textSize="15sp"
+                            android:fontFamily="monospace"
+                            android:textColor="#385645"
+                            android:gravity="center" />
+
+                        <!-- 아래쪽 여백 -->
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                    </LinearLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>

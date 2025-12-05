@@ -138,7 +138,14 @@ class RunFragment : Fragment() {
     private fun setupButtons() {
         // 횟수/걸음 기반에서 사용자가 직접 넘길 때
         binding.btnNextStep.setOnClickListener {
-            viewModel.onUserCompleteCurrentStep()
+            val state = viewModel.uiState.value
+            if (state.isFinished) {
+                // 완료 상태에서는 홈으로 돌아가기
+                findNavController().popBackStack()
+            } else {
+                // 진행 중일 땐 다음 스텝으로
+                viewModel.onUserCompleteCurrentStep()
+            }
         }
 
         // 타이머 스텝 일시정지/재개
@@ -167,18 +174,26 @@ class RunFragment : Fragment() {
                 val step = state.currentStep
                 if (step == null) {
                     // 이미 끝난 상태
-                    binding.textStepTitle.text = "완료됨"
-                    binding.textStepName.text = ""
-                    binding.textStepDetail.text = ""
-                    binding.textTimer.text = "00:00"
-                    binding.textWalkInfo.visibility = View.GONE
-                    binding.textCountInfo.visibility = View.GONE
-                    binding.textNextStepInfo.text = "루틴을 모두 완료했어요!"
-                    binding.textGuide.text = ""
-                    binding.btnPause.visibility = View.GONE
-                    binding.btnNextStep.visibility = View.GONE
+                    binding.groupRunMode.visibility = View.GONE
+                    binding.layoutComplete.visibility = View.VISIBLE
+
+                    binding.textCompleteTitle.text = "운동 완료!"
+                    binding.textCompleteRewardMessage.text = state.rewardMessage
+                    binding.textCompleteStreak.text = state.streakMessage
+                    binding.textCompleteComment.text = state.commentMessage
+
                     baseStepCount = null
+
+                    // 완료 상태에서는 완료 버튼만 보여주기
+                    binding.btnPause.visibility = View.GONE
+                    binding.btnNextStep.visibility = View.VISIBLE
+                    binding.btnNextStep.isEnabled = true
+                    binding.btnNextStep.text = "홈으로"
+
                     return@collect
+                } else {
+                    binding.groupRunMode.visibility = View.VISIBLE
+                    binding.layoutComplete.visibility = View.GONE
                 }
 
                 // 스텝이 바뀔 때마다 자동 넘김 플래그 초기화
@@ -294,8 +309,7 @@ class RunFragment : Fragment() {
                         vibrate()
                     }
                     is RunViewModel.RunEvent.RoutineFinished -> {
-                        // 완료 화면으로 이동 (nav 그래프에 맞게 action ID 수정)
-                        findNavController().navigate(R.id.completeFragment)
+                        vibrateFinishPattern()
                     }
                     is RunViewModel.RunEvent.Error -> {
                         Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
@@ -326,6 +340,29 @@ class RunFragment : Fragment() {
             @Suppress("DEPRECATION")
             vibrator.vibrate(300L)
         }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun vibrateFinishPattern() {
+        try {
+            val v = requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // 패턴: 0ms 대기 → 200ms 진동 → 100ms 쉬고 → 300ms 진동 → 100ms 쉬고 → 500ms 진동
+                val timings = longArrayOf(0, 200, 100, 300, 100, 500)
+                val amplitudes = intArrayOf(
+                    0,
+                    VibrationEffect.DEFAULT_AMPLITUDE,
+                    0,
+                    VibrationEffect.DEFAULT_AMPLITUDE,
+                    0,
+                    VibrationEffect.DEFAULT_AMPLITUDE
+                )
+                v.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
+            } else {
+                @Suppress("DEPRECATION")
+                v.vibrate(longArrayOf(0, 200, 100, 300, 100, 500), -1)
+            }
+        } catch (_: Exception) {}
     }
 
     private fun formatSeconds(sec: Int): String {

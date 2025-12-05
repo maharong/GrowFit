@@ -29,7 +29,12 @@ class RunViewModel @Inject constructor(
         val currentStep: PresetStepEntity? = null,
         val currentStepsTaken: Int = 0, // 걸음 수
         val isFinished: Boolean = false,
-        val isPaused: Boolean = false   // 타이머 일시정지 여부
+        val isPaused: Boolean = false,   // 타이머 일시정지 여부
+        // 완료 화면용
+        val rewardMessage: String = "",
+        val streakMessage: String = "",
+        val commentMessage: String = "",
+        val alreadyRewarded: Boolean = false
     )
 
     sealed class RunEvent {
@@ -130,14 +135,27 @@ class RunViewModel @Inject constructor(
         // 마지막 스텝까지 완료
         if (nextIndex >= state.steps.size) {
             viewModelScope.launch {
-                // 보상 지급 + todayComplete 처리
-                userStateManager.onPresetCompleted()
+                // 보상 지급 + 오늘 운동 완료 처리
+                val result = userStateManager.onPresetCompleted()
+                val rewardMessage = if (result.alreadyReceived) {
+                    "오늘 보상은 이미 받았어요."
+                } else {
+                    "EXP +${result.rewardExp} · 포인트 +${result.rewardPoints}"
+                }
+
+                val streakMessage = makeStreakMessage(result.streakDays)
+                val commentMessage = makeCommentMessage(result.streakDays, result.alreadyReceived)
+
                 _uiState.update {
                     it.copy(
                         isFinished = true,
                         currentStep = null,
                         remainingSeconds = null,
-                        isPaused = false
+                        isPaused = false,
+                        rewardMessage = rewardMessage,
+                        streakMessage = streakMessage,
+                        commentMessage = commentMessage,
+                        alreadyRewarded = result.alreadyReceived
                     )
                 }
                 _events.emit(RunEvent.RoutineFinished)
@@ -182,6 +200,30 @@ class RunViewModel @Inject constructor(
 
     fun cancelRoutine() {
         timerJob?.cancel()
+    }
+
+    private fun makeStreakMessage(streak: Int): String {
+        if (streak <= 0) return "오늘이 첫 운동이에요."
+
+        return when (streak) {
+            1 -> "오늘부터 1일차! 좋은 시작이에요."
+            in 2..4 -> "연속 ${streak}일째 운동 중이에요. 계속 가볼까요?"
+            in 5..9 -> "연속 ${streak}일째! 습관이 자리잡고 있어요."
+            else -> "연속 ${streak}일째! 정말 대단해요! 앞으로도 계속 이어나가요!"
+        }
+    }
+
+    private fun makeCommentMessage(streak: Int, already: Boolean): String {
+        if (already) {
+            return "오늘은 이미 멋지게 해냈어요. 내일도 같이 해봐요!"
+        }
+
+        return when {
+            streak <= 1 -> "시작이 가장 어려운 법이죠. 오늘 잘 하셨어요!"
+            streak in 2..4 -> "꾸준함이 힘이에요. 오늘도 한 걸음 전진!"
+            streak in 5..9 -> "몸이 확실히 운동을 기억하고 있을 거예요."
+            else -> "아주 좋습니다! 이대로만 꾸준히 하면 당신도 몸짱!"
+        }
     }
 
     override fun onCleared() {

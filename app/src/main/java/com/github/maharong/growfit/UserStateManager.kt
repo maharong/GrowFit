@@ -19,6 +19,13 @@ class UserStateManager(
     // 레벨별 리워드 데이터 클래스
     data class LevelReward(val exp: Int, val points: Int)
 
+    data class PresetCompleteResult(
+        val rewardExp: Int,
+        val rewardPoints: Int,
+        val alreadyReceived: Boolean,
+        val streakDays: Int,
+    )
+
     // 현재 레벨에 따른 보상량 계산
     private fun getRewardForLevel(level: Int): LevelReward {
         return when(level) {
@@ -49,13 +56,33 @@ class UserStateManager(
     }
 
     // 프리셋 완료 시 경험치, 포인트 지급
-    suspend fun onPresetCompleted() {
+    suspend fun onPresetCompleted(): PresetCompleteResult {
         val todayDate = dateProvider()
         val today = localDateToLong(todayDate)
         val state = repo.load()
 
         // 이미 오늘 보상 받았으면 무시
-        if (state.lastWorkoutDay == today) return
+        if (state.lastWorkoutDay == today) {
+            return PresetCompleteResult(
+                rewardExp = 0,
+                rewardPoints = 0,
+                alreadyReceived = true,
+                streakDays = state.streakDays   // 필드 있다고 가정
+            )
+        }
+
+        // 연속 운동일 계산
+        val lastWorkout = if (state.lastWorkoutDay == 0L) null else longToLocalDate(state.lastWorkoutDay)
+        val newStreak = if (lastWorkout == null) {
+            1
+        } else {
+            val diff = ChronoUnit.DAYS.between(lastWorkout, todayDate).toInt()
+            when {
+                diff == 1 -> state.streakDays + 1   // 어제도 했다 → 스트릭 +1
+                diff <= 0 -> state.streakDays       // 같은 날 두 번 호출 등 이상 케이스 → 유지
+                else      -> 1                      // 하루 이상 쉬었으면 스트릭 리셋
+            }
+        }
 
         // 현재 레벨 계산
         val level = getLevel(state.exp)
@@ -66,6 +93,7 @@ class UserStateManager(
         // 오늘 운동 완료 상태로 만들고 마지막 운동 날짜 갱신
         state.todayComplete = true
         state.lastWorkoutDay = today
+        state.streakDays = newStreak
 
         // 보상 지급
         state.exp += reward.exp
@@ -77,6 +105,13 @@ class UserStateManager(
             state.exp = maxExpCap
         }
         repo.save(state)
+
+        return PresetCompleteResult(
+            rewardExp = reward.exp,
+            rewardPoints = reward.points,
+            alreadyReceived = false,
+            streakDays = newStreak
+        )
     }
 
     // 일정 기간 운동을 하지 않으면 경험치 감소

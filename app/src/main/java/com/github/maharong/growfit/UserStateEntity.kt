@@ -11,5 +11,6 @@ data class UserStateEntity(
     var lastWorkoutDay: Long = 0L, // 마지막 운동 날짜
     var skinId: Int = 0, // 적용된 스킨 id
     var selectedPresetId: String? = null, // 선택된 프리셋 ID
-    var todayComplete: Boolean = false // 오늘 운동 완료 여부
+    var todayComplete: Boolean = false, // 오늘 운동 완료 여부
+    var streakDays: Int = 0 // 연속 운동일
 )

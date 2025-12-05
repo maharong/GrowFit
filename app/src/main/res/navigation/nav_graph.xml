@@ -66,12 +66,6 @@
         tools:layout="@layout/fragment_run" />
 
     <fragment
-        android:id="@+id/completeFragment"
-        android:name="com.github.maharong.growfit.CompleteFragment"
-        android:label="complete"
-        tools:layout="@layout/fragment_complete" />
-
-    <fragment
         android:id="@+id/settingsFragment"
         android:name="com.github.maharong.growfit.SettingsFragment"
         android:label="settings"
