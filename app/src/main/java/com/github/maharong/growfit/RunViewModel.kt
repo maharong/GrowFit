@@ -14,6 +14,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 루틴 실행 전체를 관리하는 ViewModel.
+ *
+ * - 현재 스텝, 남은 시간, 걸음 수를 포함한 UI 상태 관리
+ * - TIME 스텝의 타이머 진행 및 일시정지
+ * - 스텝 변경 / 프리셋 완료 시 진동 이벤트 발생
+ */
 @HiltViewModel
 class RunViewModel @Inject constructor(
     private val userStateManager: UserStateManager,
@@ -58,6 +65,12 @@ class RunViewModel @Inject constructor(
 
     private var timerJob: Job? = null
 
+    /**
+     * 루틴 실행 시작.
+     *
+     * - 프리셋 ID가 없거나 스텝이 비어있으면 Error 이벤트 발생
+     * - TIME 스텝의 경우 타이머 즉시 시작
+     */
     fun start() {
         // 이미 시작했다면 다시 안함
         if (!_uiState.value.isLoading) return
@@ -104,6 +117,10 @@ class RunViewModel @Inject constructor(
         }
     }
 
+    /**
+     * TIME 스텝이면 1초 주기로 남은 시간을 감소시키는 타이머를 생성한다.
+     * 일시정지 상태에서는 200ms 단위로 대기하여 CPU 낭비를 줄인다.
+     */
     private fun startTimerIfNeeded(step: PresetStepEntity?) {
         timerJob?.cancel()
         val duration = step?.durationSec ?: 0
@@ -148,6 +165,12 @@ class RunViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 다음 스텝으로 이동.
+     *
+     * - 마지막 스텝이면 프리셋 완료 보상 지급
+     * - TIME 스텝이면 새 타이머 시작
+     */
     fun moveToNextStep() {
         timerJob?.cancel()
 
@@ -219,7 +242,7 @@ class RunViewModel @Inject constructor(
     }
 
     /**
-     * 걸음 수 업데이트 (센서 연동 후 Fragment에서 호출)
+     * 스텝 수 업데이트 (센서 연동 후 Fragment에서 호출)
      */
     fun updateStepCount(currentSteps: Int) {
         _uiState.update { it.copy(currentStepsTaken = currentSteps) }

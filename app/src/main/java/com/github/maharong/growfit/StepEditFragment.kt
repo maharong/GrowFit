@@ -18,13 +18,19 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * 프리셋의 개별 스텝(TIME/COUNT/WALK/RUN 등)을 편집하는 화면.
+ *
+ * - PresetEditFragment와 ViewModel을 공유한다.
+ * - 스텝 타입에 따라 사용 가능한 필드를 다르게 보여준다.
+ */
 @AndroidEntryPoint
 class StepEditFragment : Fragment() {
 
     private var _binding: FragmentStepEditBinding? = null
     private val binding get() = _binding!!
 
-    // PresetEditFragment와 공유
+    // PresetEditFragment와 공유하는 ViewModel
     private val presetEditViewModel: PresetEditViewModel by activityViewModels()
 
     private lateinit var presetId: String
@@ -54,7 +60,7 @@ class StepEditFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 시스템 뒤로가기 처리
+        // 시스템 뒤로가기 버튼을 눌렀을 때 새 스텝이면 경고 다이얼로그를 띄운다.
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
@@ -73,6 +79,10 @@ class StepEditFragment : Fragment() {
         observeUiState()
     }
 
+    /**
+     * 스텝 타입 선택 스피너를 초기화하고,
+     * 선택된 타입에 따라 필드 표시를 갱신한다.
+     */
     private fun setupStepTypeSpinner() {
         val types = StepType.entries.toTypedArray()
         val labels = types.map {
@@ -111,6 +121,10 @@ class StepEditFragment : Fragment() {
             }
     }
 
+    /**
+     * PresetEditViewModel의 상태를 구독하고,
+     * 현재 편집 중인 스텝 데이터를 UI에 반영한다.
+     */
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
             presetEditViewModel.uiState.collectLatest { state ->
@@ -118,7 +132,7 @@ class StepEditFragment : Fragment() {
 
                 val step = state.steps.find { it.id == stepId }
                 if (step == null) {
-                    // 새 스텝인 경우에는 우리가 의도적으로 삭제한 것일 수 있으므로 조용히 빠져나감
+                    // 새 스텝인 경우에는 의도적으로 삭제한 것일 수 있으므로 조용히 종료
                     if (!isNew) {
                         toast("스텝을 찾을 수 없습니다.")
                         findNavController().popBackStack()
@@ -136,6 +150,9 @@ class StepEditFragment : Fragment() {
         }
     }
 
+    /**
+     * 새 스텝 편집 도중 나갈 때 경고 다이얼로그를 보여준다.
+     */
     private fun showExitWarningDialog() {
         AlertDialog.Builder(requireContext())
             .setTitle("스텝 편집 종료")
@@ -149,10 +166,13 @@ class StepEditFragment : Fragment() {
             .show()
     }
 
+    /**
+     * 스텝 엔티티 값을 화면 입력 필드에 채운다.
+     */
     private fun bindStepToUi(step: PresetStepEntity) {
         binding.editStepName.setText(step.name)
 
-        // 타입
+        // 타입 선택
         val typeIndex = StepType.entries.indexOf(step.type)
         if (typeIndex >= 0) {
             binding.spinnerStepType.setSelection(typeIndex)
@@ -178,8 +198,11 @@ class StepEditFragment : Fragment() {
         updateFieldVisibility(step.type)
     }
 
+    /**
+     * 버튼 및 라디오 그룹 리스너를 설정한다.
+     */
     private fun setupButtons() {
-        // WALK/RUN 모드 라디오 변경 시 필드 토글
+        // WALK/RUN 모드에서 TIME/STEPS 라디오 체크 변경 시 필드 토글
         binding.groupWalkRunMode.setOnCheckedChangeListener { _, _ ->
             val type = StepType.entries[binding.spinnerStepType.selectedItemPosition]
             if (type == StepType.WALKING || type == StepType.RUNNING) {
@@ -200,6 +223,9 @@ class StepEditFragment : Fragment() {
         }
     }
 
+    /**
+     * 스텝 타입에 따라 어떤 입력 필드를 보여줄지 결정한다.
+     */
     private fun updateFieldVisibility(type: StepType) {
         when (type) {
             StepType.TIME -> {
@@ -234,12 +260,12 @@ class StepEditFragment : Fragment() {
                 val useTimeMode = binding.radioModeTime.isChecked
 
                 if (useTimeMode) {
-                    // TIME 모드 → duration만
+                    // TIME 모드 → duration만 사용
                     showDuration(true)
                     showStepGoal(false)
                     binding.editStepGoal.setText("")
                 } else {
-                    // STEPS 모드 → stepGoal만
+                    // STEPS 모드 → stepGoal만 사용
                     showDuration(false)
                     showStepGoal(true)
                     binding.editDurationSec.setText("")
@@ -267,6 +293,9 @@ class StepEditFragment : Fragment() {
         binding.editStepGoal.visibility = v
     }
 
+    /**
+     * 현재 입력값을 검증하고, ViewModel에 스텝 업데이트를 요청한다.
+     */
     private fun saveStep() {
         val base = currentStep
         if (base == null) {
@@ -329,7 +358,7 @@ class StepEditFragment : Fragment() {
             stepGoal = finalGoal
         )
 
-        // 한 번이라도 저장이 성공하면, 이 프래그먼트 생명주기 안에서는 새 스텝이 아니라는 의미로 플래그 내려줌
+        // 한 번이라도 저장이 성공하면, 이 프래그먼트 생명주기 안에서는 새 스텝이 아니라고 본다.
         isNew = false
 
         presetEditViewModel.updateStep(updated)
@@ -346,6 +375,13 @@ class StepEditFragment : Fragment() {
         _binding = null
     }
 
+    /**
+     * 입력 문자열을 양의 정수로 파싱한다.
+     *
+     * @param input 입력값
+     * @param fieldName 에러 메시지에 표시할 필드 이름
+     * @return 1 이상인 정수, 잘못된 입력이면 null
+     */
     private fun parsePositiveInt(input: String, fieldName: String): Int? {
         val value = input.toIntOrNull()
         if (value == null || value < 1) {

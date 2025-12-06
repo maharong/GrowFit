@@ -6,6 +6,13 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
+/**
+ * 하나의 운동 스텝을 나타내는 엔티티.
+ *
+ * - order: 프리셋 내 순서
+ * - type: TIME / COUNT / WALK / RUN 등
+ * - durationSec / count / stepGoal 은 타입에 따라 선택적으로 사용
+ */
 @Entity(
     tableName = "preset_step",
     foreignKeys = [

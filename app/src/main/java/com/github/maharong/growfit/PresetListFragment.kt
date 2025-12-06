@@ -17,6 +17,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * 프리셋 목록 화면.
+ *
+ * - 프리셋 리스트 표시
+ * - 프리셋 선택(임시 → 확정)
+ * - 새 프리셋 생성 / 삭제 / 편집 이동
+ */
 @AndroidEntryPoint
 class PresetListFragment : Fragment() {
 
@@ -44,10 +51,11 @@ class PresetListFragment : Fragment() {
         observeUiState()
     }
 
+    /** RecyclerView + 어댑터 설정 */
     private fun setupRecyclerView() {
         adapter = PresetListAdapter(
             onItemClick = { item ->
-                // 아이템 클릭 -> 임시 선택
+                // 임시 선택만 바꾸고 확정은 따로 진행
                 viewModel.onPresetClicked(item.id)
             },
             onDeleteClick = { item ->
@@ -70,8 +78,9 @@ class PresetListFragment : Fragment() {
         }
     }
 
+    /** 버튼 이벤트 설정 */
     private fun setupButtons() {
-        // SELECT 버튼: 임시 선택 프리셋 확정 + 홈으로 이동
+        // SELECT → 임시 선택한 프리셋을 실제 선택된 프리셋으로 반영
         binding.btnSelectPreset.setOnClickListener {
             viewModel.confirmSelection(
                 onNoSelection = {
@@ -89,7 +98,7 @@ class PresetListFragment : Fragment() {
             )
         }
 
-        // ADD 버튼: 새 프리셋 생성 후, 편집 화면으로 이동
+        // 새 프리셋 생성 후 편집 화면으로 이동
         binding.btnAddPreset.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 val newId = viewModel.createEmptyPreset()
@@ -99,7 +108,7 @@ class PresetListFragment : Fragment() {
             }
         }
 
-        // EDIT 버튼: 임시 선택된 프리셋이 있을 때만 편집 화면으로 이동
+        // 임시 선택된 프리셋이 있을 때만 편집 화면으로 이동
         binding.btnEditPreset.setOnClickListener {
             val tempId = viewModel.uiState.value.tempSelectedPresetId
                 ?: return@setOnClickListener Toast.makeText(
@@ -112,6 +121,7 @@ class PresetListFragment : Fragment() {
         }
     }
 
+    /** ViewModel 상태 구독 → UI 반영 */
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
@@ -132,7 +142,7 @@ class PresetListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // 리스트 화면 갱신
+        // 편집 후 복귀 시 목록 갱신
         viewModel.loadPresets()
     }
 

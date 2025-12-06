@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
- * 홈 화면 Fragment.
+ * 앱 메인 홈 화면.
  *
- * - HomeViewModel의 uiState를 관찰해서
- *   식물 이미지, 레벨, 경험치, 포인트를 화면에 반영한다.
+ * - 식물 이미지 표시 (스킨 × 레벨)
+ * - 경험치/포인트/프리셋/오늘 완료 상태 표시
+ * - 프리셋 선택/운동 시작/상점/설정 화면으로 이동
  */
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -50,8 +51,8 @@ class HomeFragment : Fragment() {
     }
 
     /**
-     * ViewModel의 uiState를 관찰하면서
-     * 식물 이미지 / 레벨 / 경험치 / 포인트를 UI에 반영한다.
+     * ViewModel 상태(UIState)를 구독하여 UI를 갱신한다.
+     * - ProgressBar는 해당 레벨 구간 내 경험치만 표시
      */
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -95,6 +96,13 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * 홈 화면 버튼 처리:
+     * - 프리셋 선택
+     * - 운동 시작
+     * - 스킨 상점
+     * - 설정
+     */
     private fun setupButtons() {
 
         // 프리셋 선택

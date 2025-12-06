@@ -9,6 +9,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 진동 설정을 관리하는 ViewModel.
+ *
+ * - UserStateEntity 로드 후 UI 상태 초기화
+ * - 스위치 변경 시 즉시 DB 저장
+ */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userStateRepository: UserStateRepository
@@ -34,6 +40,9 @@ class SettingsViewModel @Inject constructor(
         load()
     }
 
+    /**
+     * UserStateEntity를 로드하여 UI 상태를 구성한다.
+     */
     private fun load() {
         viewModelScope.launch {
             val state = userStateRepository.load()
@@ -50,6 +59,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * UI 상태 → DB 저장 (실시간 반영).
+     */
     private fun save() {
         val currentEntity = entity ?: return
         val ui = _uiState.value
@@ -65,6 +77,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // 아래 setter 함수들은 모두:
+    // 1) UI 상태 업데이트
+    // 2) save() 호출
     fun setVibrateEnabled(enabled: Boolean) {
         _uiState.update { it.copy(vibrateEnabled = enabled) }
         save()

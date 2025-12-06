@@ -36,10 +36,12 @@ class RunFragment : Fragment() {
 
     // 센서 관련 필드
     private var sensorManager: SensorManager? = null
-    private var stepCounterSensor: Sensor? = null
-    private var baseStepCount: Int? = null
+    private var stepDetectorSensor: Sensor? = null
 
-    // 걸음 목표 자동 넘김이 이미 실행된 스텝인지 체크용
+    // Detector는 '걸음 단위 이벤트'라서 누적값이 아닌 직접 카운팅 변수를 둔다.
+    private var currentStepCountForStep: Int = 0
+
+    // 자동 넘김이 스텝별로 1회만 실행되도록 차단하기 위한 플래그
     private var autoMovedStepId: String? = null
     private var lastStepId: String? = null
 
@@ -54,7 +56,7 @@ class RunFragment : Fragment() {
             "android.permission.ACTIVITY_RECOGNITION"
     }
 
-    // 활동 인식 권한 요청 (새 Activity Result API 사용)
+    // 활동 인식 권한 요청
     private val activityRecognitionPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             hasActivityRecognitionPermission = granted
@@ -79,9 +81,10 @@ class RunFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 센서 매니저, 센서 초기화
+        // 센서 매니저 초기화
         sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        stepCounterSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        // TYPE_STEP_DETECTOR 기반으로 1보 단위 이벤트만 받는다.
+        stepDetectorSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
 
         // 활동 인식 권한 확인
         checkActivityRecognitionPermission()
@@ -97,7 +100,7 @@ class RunFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         if (hasActivityRecognitionPermission) {
-            stepCounterSensor?.also { sensor ->
+            stepDetectorSensor?.also { sensor ->
                 sensorManager?.registerListener(
                     stepListener,
                     sensor,
@@ -159,6 +162,7 @@ class RunFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
 
+                // 로딩 중/완료 표시 전환
                 if (state.isLoading) {
                     binding.groupContent.visibility = View.GONE
                     binding.progressLoading.visibility = View.VISIBLE
@@ -173,7 +177,8 @@ class RunFragment : Fragment() {
 
                 val step = state.currentStep
                 if (step == null) {
-                    // 이미 끝난 상태
+                    // 루틴이 끝났을 때 UI 표시
+                    // 걸음 수 초기화 + 완료 화면 안내 구성
                     binding.groupRunMode.visibility = View.GONE
                     binding.layoutComplete.visibility = View.VISIBLE
 
@@ -182,7 +187,7 @@ class RunFragment : Fragment() {
                     binding.textCompleteStreak.text = state.streakMessage
                     binding.textCompleteComment.text = state.commentMessage
 
-                    baseStepCount = null
+                    currentStepCountForStep = 0
 
                     // 완료 상태에서는 완료 버튼만 보여주기
                     binding.btnPause.visibility = View.GONE
@@ -196,10 +201,13 @@ class RunFragment : Fragment() {
                     binding.layoutComplete.visibility = View.GONE
                 }
 
-                // 스텝이 바뀔 때마다 자동 넘김 플래그 초기화
+                // 스텝이 바뀌었을 때만 값 초기화 (중복 초기화 방지)
                 if (step.id != lastStepId) {
                     lastStepId = step.id
                     autoMovedStepId = null
+
+                    currentStepCountForStep = 0
+                    viewModel.updateStepCount(0)
                 }
 
                 val total = state.steps.size
@@ -222,8 +230,8 @@ class RunFragment : Fragment() {
                 // 타입에 따라 UI 구성
                 when (step.type) {
                     StepType.TIME, StepType.REST -> {
-                        // 걸음 관련 리셋
-                        baseStepCount = null
+                        // TIME/REST는 걸음 수 무의미 → 리셋
+                        currentStepCountForStep = 0
                         binding.textWalkInfo.visibility = View.GONE
 
                         binding.textTimer.visibility = View.VISIBLE
@@ -250,8 +258,8 @@ class RunFragment : Fragment() {
                     }
 
                     StepType.COUNT -> {
-                        // 걸음 관련 리셋
-                        baseStepCount = null
+                        // COUNT는 사용자가 직접 완료 버튼을 누르는 구조
+                        currentStepCountForStep = 0
                         binding.textWalkInfo.visibility = View.GONE
 
                         binding.textTimer.visibility = View.GONE
@@ -270,9 +278,8 @@ class RunFragment : Fragment() {
                     }
 
                     StepType.WALKING, StepType.RUNNING -> {
-                        // 걷기/달리기 스텝에 들어올 때마다 기준값 초기화
-                        baseStepCount = null
-
+                        // TIME 기반 RUN/WALK와 STEP 기반 RUN/WALK를 구분해서 처리
+                        // stepGoal 이 null이면 STEP 기반이 아님
                         binding.textCountInfo.visibility = View.GONE
 
                         val duration = step.durationSec ?: 0
@@ -346,14 +353,14 @@ class RunFragment : Fragment() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // API 26+
             val effect = VibrationEffect.createOneShot(
-                300L,
+                600L,
                 VibrationEffect.DEFAULT_AMPLITUDE
             )
             vibrator.vibrate(effect)
         } else {
             // API 25 이하
             @Suppress("DEPRECATION")
-            vibrator.vibrate(300L)
+            vibrator.vibrate(600L)
         }
     }
 
@@ -363,7 +370,7 @@ class RunFragment : Fragment() {
             val v = requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 // 패턴: 0ms 대기 → 200ms 진동 → 100ms 쉬고 → 300ms 진동 → 100ms 쉬고 → 500ms 진동
-                val timings = longArrayOf(0, 200, 100, 300, 100, 500)
+                val timings = longArrayOf(0, 300, 120, 400, 120, 600)
                 val amplitudes = intArrayOf(
                     0,
                     VibrationEffect.DEFAULT_AMPLITUDE,
@@ -375,7 +382,7 @@ class RunFragment : Fragment() {
                 v.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
             } else {
                 @Suppress("DEPRECATION")
-                v.vibrate(longArrayOf(0, 200, 100, 300, 100, 500), -1)
+                v.vibrate(longArrayOf(0, 300, 120, 400, 120, 600), -1)
             }
         } catch (_: Exception) {}
     }
@@ -397,32 +404,23 @@ class RunFragment : Fragment() {
         _binding = null
     }
 
-    // 센서 리스너
+    // Detector 이벤트 = 1걸음 발생
     private val stepListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             val sensorEvent = event ?: return
-            if (sensorEvent.sensor.type != Sensor.TYPE_STEP_COUNTER) return
+            if (sensorEvent.sensor.type != Sensor.TYPE_STEP_DETECTOR) return
 
-            // 현재 스텝이 걷기/달리기일 때만 반응
+            // 걷기/달리기 스텝 외에는 무시
             val currentStep = viewModel.uiState.value.currentStep ?: return
             if (currentStep.type != StepType.WALKING && currentStep.type != StepType.RUNNING) {
                 return
             }
 
-            val totalFromBoot = sensorEvent.values[0].toInt()
+            // 1보 증가
+            currentStepCountForStep += 1
+            viewModel.updateStepCount(currentStepCountForStep)
 
-            // 아직 기준이 없으면 지금 값을 기준으로 저장
-            val base = baseStepCount ?: run {
-                baseStepCount = totalFromBoot
-                return
-            }
-
-            val diff = totalFromBoot - base
-            if (diff < 0) return
-
-            // ViewModel에 현재 스텝에서의 걸음 수 전달
-            viewModel.updateStepCount(diff)
-
+            // 목표 걸음 달성 시 자동 넘김 (스텝당 1회만)
             val goal = currentStep.stepGoal
             val duration = currentStep.durationSec ?: 0
 
@@ -430,7 +428,7 @@ class RunFragment : Fragment() {
             val isStepsMode = duration <= 0 && goal != null && goal > 0
 
             if (isStepsMode &&
-                diff >= goal &&
+                currentStepCountForStep >= goal &&
                 autoMovedStepId != currentStep.id
             ) {
                 // 이 스텝에서 자동 넘김은 한 번만 실행
@@ -440,7 +438,7 @@ class RunFragment : Fragment() {
         }
 
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-            // 필요 없음
+            // no-op
         }
     }
 

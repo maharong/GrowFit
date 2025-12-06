@@ -10,10 +10,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * 프리셋 리스트 화면용 ViewModel.
+ * 프리셋 리스트 화면 ViewModel.
  *
- * - 모든 프리셋 목록을 불러와서 UI에 제공
- * - 새 프리셋 생성 (빈 스텝 리스트) 후, 생성된 id를 반환
+ * - 프리셋 목록 로드
+ * - 새 프리셋 생성
+ * - 선택/삭제 처리
  */
 @HiltViewModel
 class PresetListViewModel @Inject constructor(
@@ -42,8 +43,7 @@ class PresetListViewModel @Inject constructor(
     }
 
     /**
-     * 모든 프리셋 + 스텝을 불러와서
-     * 리스트 형태로 UI 상태에 반영.
+     * DB에서 모든 프리셋 + 스텝을 불러와 UI 모델로 변환한다.
      */
     fun loadPresets() {
         viewModelScope.launch {
@@ -71,11 +71,7 @@ class PresetListViewModel @Inject constructor(
     }
 
     /**
-     * 빈 프리셋을 하나 생성하고, 생성된 프리셋의 id(UUID)를 반환.
-     *
-     * - 이름은 임시로 defaultName 사용
-     * - 스텝은 비어 있는 상태에서 시작하고,
-     *   이후 PresetEditFragment에서 스텝을 추가/수정한다.
+     * 비어있는 새 프리셋을 만들고 즉시 목록을 갱신한다.
      */
     suspend fun createEmptyPreset(defaultName: String = "New Preset"): String {
         val newId = presetRepository.createPreset(
@@ -87,7 +83,9 @@ class PresetListViewModel @Inject constructor(
         return newId
     }
 
-    // 프리셋 임시 선택
+    /**
+     * 리스트에서 아이템을 눌렀을 때 '임시 선택' 상태만 업데이트한다.
+     */
     fun onPresetClicked(id: String) {
         _uiState.update { state ->
             state.copy(tempSelectedPresetId = id)
@@ -114,9 +112,8 @@ class PresetListViewModel @Inject constructor(
     }
 
     /**
-     * SELECT 버튼 눌렀을 때 호출:
-     * - tempSelectedPresetId가 있으면 선택된 프리셋으로 확정 + DB에 저장
-     * - 없으면 → onNoSelection 콜백만 호출
+     * 최종 선택 완료.
+     * - tempSelectedPresetId를 실제 선택된 프리셋으로 반영
      */
     fun confirmSelection(
         onNoSelection: () -> Unit,

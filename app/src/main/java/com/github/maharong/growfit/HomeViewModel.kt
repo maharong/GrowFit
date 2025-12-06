@@ -32,10 +32,10 @@ data class HomeUiState(
 )
 
 /**
- * 홈 화면용 ViewModel.
+ * 홈 화면 ViewModel.
  *
- * - UserStateManager를 사용해 현재 유저 상태를 불러오고
- * - 화면에서 필요한 형태(HomeUiState)로 가공해서 StateFlow로 제공한다.
+ * - UserStateManager로부터 현재 유저 상태를 불러오고
+ * - 프리셋 이름, 경험치 구간, 레벨 등을 계산해 UIState로 구성한다.
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -47,9 +47,10 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState
 
     /**
-     * 홈 화면 진입 시 호출.
-     * - 비활성 패널티 적용
-     * - 현재 상태 불러와서 UI 상태 갱신
+     * 홈 화면 진입 시 수행:
+     * - 오늘 날짜 기준 todayComplete 초기화
+     * - 운동 미실시 패널티 적용
+     * - 현재 상태 불러와 UIState 업데이트
      */
     fun load() {
         viewModelScope.launch {
@@ -84,8 +85,8 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * 프리셋(운동) 완료 후 홈 화면으로 돌아왔을 때,
-     * 보상 지급 후 상태를 다시 로드하는 함수.
+     * 운동 완료 후 홈 화면 돌아왔을 때 상태를 다시 불러오는 함수.
+     * (보상 지급 후 UI 갱신)
      */
     fun refreshAfterPreset() {
         viewModelScope.launch {

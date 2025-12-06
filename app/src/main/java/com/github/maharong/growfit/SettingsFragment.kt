@@ -13,6 +13,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * 진동 관련 사용자 설정 화면.
+ *
+ * - 전체 진동 on/off
+ * - 마지막 N초 전 알림
+ * - 스텝 변경 / 프리셋 완료 진동 옵션
+ */
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
 
@@ -38,6 +45,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun observeUi() {
+        // UI → ViewModel 동기 업데이트 (무한 루프 방지)
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
                 if (!state.isLoaded) return@collectLatest
@@ -82,6 +90,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setupListeners() {
+        // 스위치 변경 시 ViewModel에 반영
         binding.switchVibrateOverall.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setVibrateEnabled(isChecked)
         }

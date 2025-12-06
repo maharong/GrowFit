@@ -17,6 +17,13 @@ import com.github.maharong.growfit.databinding.FragmentPresetEditBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+/**
+ * 프리셋 편집 화면 Fragment.
+ *
+ * - 프리셋 이름 수정
+ * - 스텝 추가/삭제/편집/순서 이동
+ * - 저장 시 ViewModel의 save() 호출
+ */
 @AndroidEntryPoint
 class PresetEditFragment : Fragment() {
 
@@ -46,9 +53,16 @@ class PresetEditFragment : Fragment() {
         observeUiState()
         setupButtons()
 
+        // 프리셋 + 스텝 로드
         viewModel.load(presetId)
     }
 
+    /**
+     * ViewModel UI 상태를 관찰하여 UI에 반영한다.
+     * - 이름 변경
+     * - 스텝 목록 갱신
+     * - 빈 목록 안내 문구 표시
+     */
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
@@ -65,7 +79,10 @@ class PresetEditFragment : Fragment() {
         }
     }
 
-
+    /**
+     * RecyclerView + 드래그 앤 드롭 설정.
+     * - ItemTouchHelper의 onMove에서 ViewModel.moveStep() 호출
+     */
     private fun setupRecyclerView() {
         adapter = PresetStepAdapter(
             onItemClick = { step ->
@@ -104,6 +121,13 @@ class PresetEditFragment : Fragment() {
         ItemTouchHelper(callback).attachToRecyclerView(binding.recyclerSteps)
     }
 
+    /**
+     * 버튼 이벤트 설정
+     * - 이름 변경
+     * - 스텝 추가
+     * - 선택된 스텝 편집
+     * - 프리셋 저장
+     */
     private fun setupButtons() {
         // 이름 변경
         binding.editPresetName.addTextChangedListener {
@@ -126,7 +150,7 @@ class PresetEditFragment : Fragment() {
 
             viewModel.addStep(newStep)
 
-            // 새 스텝의 UUID를 들고 스텝 편집 화면으로 이동
+            // 새 스텝 편집 화면 이동
             val action = PresetEditFragmentDirections
                 .actionPresetEditFragmentToStepEditFragment(
                     presetId = state.presetId,

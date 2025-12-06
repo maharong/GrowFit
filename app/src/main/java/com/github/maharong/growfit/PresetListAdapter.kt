@@ -9,13 +9,12 @@ import com.github.maharong.growfit.databinding.ItemPresetBinding
 import androidx.core.graphics.toColorInt
 
 /**
- * 프리셋 리스트용 RecyclerView 어댑터.
+ * 프리셋 목록 RecyclerView 어댑터.
  *
- * - 아이템 클릭: 임시 선택 (tempSelectedPresetId 변경용 콜백)
- * - 삭제 버튼 클릭: 프리셋 삭제 콜백
- * - 선택 상태 표시:
- *   - currentPresetId: 이미 오늘 프리셋으로 선택된 항목
- *   - tempSelectedPresetId: 리스트 화면에서 사용자가 클릭한 항목
+ * - currentPresetId : 오늘 선택된 프리셋 강조
+ * - tempSelectedPresetId : 리스트에서 임시로 선택한 프리셋 강조
+ * - onItemClick : 임시 선택 변경
+ * - onDeleteClick : 삭제 요청
  */
 class PresetListAdapter(
     private val onItemClick: (PresetListViewModel.PresetItemUi) -> Unit,
@@ -44,7 +43,7 @@ class PresetListAdapter(
             }
         }
 
-    // 특정 ID를 가진 아이템만 갱신하는 함수
+    // ID가 일치하는 단일 항목만 갱신
     private fun refreshItem(id: String) {
         val index = currentList.indexOfFirst { it.id == id }
         if (index != -1) {
@@ -79,7 +78,7 @@ class PresetListAdapter(
                 else     -> baseInfo
             }
 
-            // 선택 상태별 배경 색 (CardView)
+            // 강조 색상 처리
             val card = binding.root
             val normalColor  = "#FFFFFF".toColorInt()   // 기본 흰색
             val currentColor = "#E7D7FF".toColorInt()   // 오늘 프리셋 (밝은 연두색)

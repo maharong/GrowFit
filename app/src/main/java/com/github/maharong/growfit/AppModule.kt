@@ -12,12 +12,12 @@ import javax.inject.Singleton
 import kotlin.jvm.java
 
 /**
- * 앱 전역에서 사용할 의존성을 제공하는 Hilt 모듈.
+ * 앱 전역에서 필요한 DI 의존성을 제공하는 Hilt 모듈.
  *
  * - Room Database
- * - UserStateDao
- * - UserStateRepository
- * - UserStateManager
+ * - 각 DAO
+ * - Repository
+ * - UserStateManager (dateProvider 포함)
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -36,21 +36,15 @@ object AppModule {
             AppDatabase::class.java,
             "growfit-db"
         )
-            .fallbackToDestructiveMigration(true)
+            // TODO: 다음 스키마 변경 시 migration 추가
             .build()
     }
 
-    /**
-     * UserStateDao 제공
-     */
+    /** 유저 상태 DAO/Repo/Manager */
     @Provides
     fun provideUserStateDao(
         db: AppDatabase
     ): UserStateDao = db.userStateDao()
-
-    /**
-     * UserStateRepository 제공
-     */
     @Provides
     fun provideUserStateRepository(
         dao: UserStateDao
@@ -58,26 +52,37 @@ object AppModule {
 
     /**
      * UserStateManager 제공
-     *
-     * - dateProvider는 기본적으로 LocalDate.now()를 사용한다.
+     * - dateProvider를 분리하여 테스트 가능하게 구성
      */
     @Provides
     fun provideUserStateManager(
-        repo: UserStateRepository
+        repo: UserStateRepository,
+        ownedSkinRepository: OwnedSkinRepository
     ): UserStateManager {
         return UserStateManager(
             repo = repo,
+            ownedSkinRepo = ownedSkinRepository,
             dateProvider = { LocalDate.now() }
         )
     }
 
+    /** 프리셋 DAO/Repo */
     @Provides
     fun providePresetDao(
         db: AppDatabase
     ): PresetDao = db.presetDao()
-
     @Provides
     fun providePresetRepository(
         dao: PresetDao
     ): PresetRepository = PresetRepository(dao)
+
+    /** 스킨 DAO/Repo */
+    @Provides
+    fun provideOwnedSkinDao(
+        db: AppDatabase
+    ): OwnedSkinDao = db.ownedSkinDao()
+    @Provides
+    fun provideOwnedSkinRepository(
+        dao: OwnedSkinDao
+    ): OwnedSkinRepository = OwnedSkinRepository(dao)
 }
