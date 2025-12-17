@@ -56,10 +56,12 @@ object AppModule {
      */
     @Provides
     fun provideUserStateManager(
+        db: AppDatabase,
         repo: UserStateRepository,
         ownedSkinRepository: OwnedSkinRepository
     ): UserStateManager {
         return UserStateManager(
+            db = db,
             repo = repo,
             ownedSkinRepo = ownedSkinRepository,
             dateProvider = { LocalDate.now() }

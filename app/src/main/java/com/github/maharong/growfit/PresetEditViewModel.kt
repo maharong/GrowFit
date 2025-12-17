@@ -81,10 +81,16 @@ class PresetEditViewModel @Inject constructor(
     /** 스텝 삭제 후 선택 상태도 정리 */
     fun deleteStep(id: String) {
         _uiState.update { state ->
-            val newSteps = state.steps.filter { it.id != id }
+            val filtered = state.steps.filter { it.id != id }
+
+            val normalized = filtered
+                .sortedBy { it.order }
+                .mapIndexed { index, step -> step.copy(order = index) }
+
             val newSelected = if (state.selectedStepId == id) null else state.selectedStepId
+
             state.copy(
-                steps = newSteps,
+                steps = normalized,
                 selectedStepId = newSelected
             )
         }

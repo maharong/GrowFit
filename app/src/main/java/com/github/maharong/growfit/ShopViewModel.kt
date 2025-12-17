@@ -64,7 +64,6 @@ class ShopViewModel @Inject constructor(
     )
     /** 토스트 등 일회성 UI 이벤트 스트림 */
     val events = _events
-
     init {
         refresh()
     }
@@ -113,7 +112,13 @@ class ShopViewModel @Inject constructor(
                         _events.emit(ShopUiEvent.ShowMessage("${item.name} 스킨을 구매했어요!"))
                         refresh()
                     } else {
-                        _events.emit(ShopUiEvent.ShowMessage("포인트가 부족해요."))
+                        val alreadyOwned = userStateManager.isSkinOwned(skinId) // 아래 함수 추가
+                        if (alreadyOwned) {
+                            _events.emit(ShopUiEvent.ShowMessage("이미 보유한 스킨이에요."))
+                            refresh()
+                        } else {
+                            _events.emit(ShopUiEvent.ShowMessage("포인트가 부족해요."))
+                        }
                     }
                 }
                 SkinButtonState.SELECT -> {

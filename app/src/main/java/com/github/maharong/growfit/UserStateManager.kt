@@ -2,6 +2,7 @@ package com.github.maharong.growfit
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import androidx.room.withTransaction
 
 /**
  * 유저 상태(경험치, 포인트, 운동 날짜, 스킨 보유 등)에 대한
@@ -11,6 +12,7 @@ import java.time.temporal.ChronoUnit
  * - 날짜 계산은 [dateProvider]를 통해 주입받아 테스트하기 쉽게 구성한다.
  */
 class UserStateManager(
+    private val db: AppDatabase,
     private val repo: UserStateRepository,
     private val ownedSkinRepo: OwnedSkinRepository,
     private val dateProvider: () -> LocalDate = { LocalDate.now() }
@@ -280,23 +282,28 @@ class UserStateManager(
      *
      * @param skinId 구매할 스킨 ID
      * @param price  스킨 가격(포인트)
-     * @return `true` = 구매 성공, `false` = 포인트 부족
+     * @return `true` = 구매 성공, `false` = 구매 실패(포인트 부족/이미 보유)
      */
-    suspend fun buySkin(skinId: Int, price: Int): Boolean {
-        val state = repo.load()
+    suspend fun buySkin(skinId: Int, price: Int): Boolean =
+        db.withTransaction {
+            val state = repo.load()
 
-        // 이미 보유 중이면 그냥 성공 처리
-        if (ownedSkinRepo.isOwned(skinId)) return true
+            when {
+                // 이미 보유 중인 스킨이면 구매 실패 처리
+                ownedSkinRepo.isOwned(skinId) -> false
 
-        if (state.points < price) return false
+                // 포인트가 부족하면 구매 실패 처리
+                state.points < price -> false
 
-        // 포인트 차감 + 보유 추가
-        state.points -= price
-        repo.save(state)
+                else -> {
+                    state.points -= price
+                    repo.save(state)
+                    ownedSkinRepo.addOwned(skinId)
 
-        ownedSkinRepo.addOwned(skinId)
-        return true
-    }
+                    true
+                }
+            }
+        }
 
     /**
      * 보유 중인 스킨을 선택하여 적용한다.
@@ -312,4 +319,7 @@ class UserStateManager(
         repo.save(state)
         return true
     }
+
+    suspend fun isSkinOwned(skinId: Int): Boolean =
+        ownedSkinRepo.isOwned(skinId)
 }
